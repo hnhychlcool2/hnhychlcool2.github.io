@@ -295,6 +295,86 @@
 
 
   
+    <article id="post-以太坊技术" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2024/12/26/%E4%BB%A5%E5%A4%AA%E5%9D%8A%E6%8A%80%E6%9C%AF/">以太坊技术原理基础知识</a>
+    </h1>
+  
+
+        
+        <a href="/2024/12/26/%E4%BB%A5%E5%A4%AA%E5%9D%8A%E6%8A%80%E6%9C%AF/" class="archive-article-date">
+  	<time datetime="2024-12-25T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-12-26</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>###以太坊层级架构</p>
+<p>应用层dapp应用,Geth控制台,web3.js接口库以及Remix合约编写软件和Mist钱包软件网络层以太坊点对点通信和RPC接口服务合约层某些公链不具备这一层,例如比特币就没有合约层,以太坊合约层主要是基于智能合约虚拟机EVM的智能合约模块共识层节点使用的共识机制激励层挖矿激励,挖出胜出区块的节点或打包了叔块的区块链所对应的节点,矿工会依规获取设定的ETH奖励数据层用于整体数据管理,包含但不限定区块数据,交易数据,事件数据,以及levelDB存储技术模块等<br>以太坊钱包地址(钱包地址)<br>在header结构体中,有一个coinbase变量,其本质上是一个字符长度为42的十六进制地址,在以太坊中,每一个账户包括智能合约都有一个唯一的标识自己的地址值,通过这个地址值可以使用以太坊的RPC接口查询到相关信息.这个地址有如下规则<br>1.0x开头<br>2.出0x这两个字符外,剩下的部分必须是由字母a-f和数字0-9组成的40个字符,其中字母不区分大小写<br>3.整体是一个16进制的字符串</p>
+<p>地址的作用主要有:<br>1.唯一标识一个账户或者智能合约<br>2.作为标识,用于查询该账户的相关信息,如代币余额,交易记录等<br>3.进行以太坊交易时,充当唯一标识<br>地址分2类:非智能合约地址和智能合约地址(又称外部账户和合约账户),可以使用以太坊源码提供的’eth_getCode’接口判断该地址是那种类型账户<br>地址的生成:地址分为合约地址,非合约地址,以太坊账户体系中,不同地址生成方式也不相同<br>钱包地址生成:<br>1.根据非对称加密算法中的椭圆曲线算法(ECC)生成的公钥和私钥<br>2.再从公钥的hash中提取后20个字节作为钱包地址<br>智能合约地址生成:<br>1.使用rlp算法将(合约创建者地址+当前创建合约交易的序列号Nonce)进行序列化<br>2.使用keccak256将步骤1的序列化数据进行hash运输,得出一个hash值<br>3.取第2步的hash值前12字节之后的所有字节生成地址,即后20个字节<br>钱包地址和合约地址的生成方式的区别:合约地址和椭圆曲线加密无关,因为合约地址是基于用户地址和交易序号的,所以也不会生成雷同地址<br>为什么钱包地址生成规则要如此复杂:主要是私钥重复的概率几乎为0,私钥是通过伪随机算法(PRNG)产生的,所生成的私钥二进制的形式表示,一共有256位,即32字节,即256个0,1,它的组合是2的256次方个,数量非常大,比宇宙中的原子数都还多几十个数量级,因此可以保证100%账户不重复,采用16进制形式地址是为了便于程序读写</p>
+<p>Nonce的作用<br>区块结构Header中的Nonce,和交易中的Nonce是不一样的,header中的Nonce主要用于pow共识情况下的挖矿,交易中的Nonce指的是我们在调用以太坊交易rpc接口所带的参数,它代表交易序列号<br>交易中Nonce主要作用:<br>1.作为交易接口参数<br>2.代表每次交易的序列号,方便节点程序处理被重复发起的交易<br>Nonce交易规则:<br>1.如果Nonce比最近一次成功交易的Nonce要小,转账出错<br>2.如果Nonce比最近一次成功的交易的Nonce大了不止1,那么这次交易就会被挂起,进入队列中进行等待pending,直到补齐了最近成功的哪个交易后,此交易才会被执行<br>3.还处于队列中的交易,在其他节点的缓存尚未收到并存留这次交易的广播信息的情况下,此时发起交易的这个节点挂了(宕机或者脱网),那么还没被处理的这次交易将会丢失,因为此时的交易存放于内存中尚未被广播出去<br>4.处于pending状态的交易,如果其Nonce相同,就会引发节点对交易的进一步判断,通常会选出燃料费(gas)最高的,替换燃料费低的</p>
+<p>Gas作用:<br>1.维持ETH经济生态<br>2.防止发生交易攻击,增加攻击代价<br>gas单位为wei,1 ETH &#x3D; 1e18 wei</p>
+<p>Uncle Block 叔块:此概念只在ETH中有,因为BTC中挖出分叉的uncle block没有任何奖励,而eth block chain中挖出孤块也有获得ETH奖励的可能性,这两者的差异.孤块在以太坊链中有机会成为叔块的,当一个孤块被另一个符合层级限制内的区块采纳为uncle block时,挖出这个孤块的矿工就会获得ETH的奖励.此时的孤块也就变成了叔块</p>
+<p>挖矿奖励<br>1.普通的成功进入主链的区块,有ETH奖励<br>1.1被设置好了的固定挖矿奖励,即block reward(区块奖励),这个值在以太坊早期的时候,节点规范设置的是5ETH,后面被设置为3ETH,升级到君士坦丁堡版本后,变为2ETH<br>1.2挖出的区块打包了所有交易的gas总和<br>1.3当前这个区块所打包的叔块的奖励,每打包一个叔块,奖励block reward  1&#x2F;32,打包N个叔块,奖励是N*block reward * 1&#x2F;32. N&lt;&#x3D;2<br>2.被主链区块打包成叔块的分叉区块,有ETH奖励<br>3.孤块,没有任何奖励</p>
+<p>账户模型:比特币UTXO(Unspent Transaction Output&#x2F;未花费的交易输出) 模型是一种交易数据的存储模型,目前比特币采用的就是它<br>UTXO包含<br>1.每笔交易拥有:输入部分(input),输出部分(output)<br>2.输出能够从unspent状态转为spend状态,这个过程被称为”被使用”,spend状态的输出会成为另一条符合UTXO模型交易的输入部分<br>3.输出部分包含:已被会花费的输出,即已当做后面交易的输入,此时spend字段为true,没被花费的输出,即还没被作为后面交易的输入,此时spend字段值为false</p>
+<p>每一笔交易的输出最终都能追寻一个一开始的输入<br>交易的最初输入都来源于挖矿的收益地址,这个地址我们一般称为coinbase<br>UTXO模型优缺点<br>优点<br>1.无状态,只要交易的签名合法,交易额正确,那么被交易区块打包并广播确认后就会被直接进行存储.这会更容易的应对并发转账的情况,因为没有类似序列号的东西当一个地址拥有很多UTXO的时候,可以同时发起多笔交易<br>2.除coinbase交易外,交易的input始终链接在某个UTXO后面,交易的先后顺序和依赖关系非常容易被验证<br>缺点<br>1.无法进行复杂逻辑,可编程性差,例如以太坊的智能合约功能无法通过UTXO模型进行扩展实现<br>2.性能问题,例如计算某个地址中的余额,需要遍历整个网络中全部相关区块才能计算,找到该地址的UTXO,当该地址相关交易区块较多时,时间复杂度会剧增,获取余额操作会比较慢</p>
+<p>Trie树(前缀树):字典树,是树形数据结构的一种,同范畴的还有完全二叉树,红黑树等.<br>按字符归类构成节点,便于按字符快速检索,但由于非根节点存储每一个字符,需要占用较大内存.且树的层级会较高</p>
+<p>Patricia Trie 树是对trie树的优化,它的非根节点存储的是字符串,而非字符,从而节约内存,降低树的高度<br>以太坊MPT树(Merkle Patricia Trie):即默克尔前缀树</p>
+<p>以太坊Account模型:以太坊区块Header结构体中root变量的真实含义是,以太坊区块账户MPT树根节点的hash value,区块账号MPT树中每个叶子节点的key中存放的是以太坊钱包的地址,叶子节点的value对应的是以太坊状态对象stateObject,而状态对象stateObject中又包含账号Account对象,在Account对象中有一个指针变量Balance,指向以太坊越的内存地址,这就是以太坊账户模型<br>type stateObject struct {<br>address Common.Address<br>addrHash Common.Hash    &#x2F;&#x2F;钱包地址的hash变量形式<br>data    Account    &#x2F;&#x2F; Account对象<br>db    *StateDB<br>dbErr error<br>trie Trie    &#x2F;&#x2F; 首次访问,stateObject还没被纳入树节点,它会是空置<br>code    &#x2F;&#x2F;只有当该账号是智能合约时,他才有值,对应的是合约的bytecode<br>…<br>}<br>type Account struct {<br>Nonce uint64<br>Balance *big.Int<br>Root common.Hash    &#x2F;&#x2F;树根的hash值<br>CodeHash    [] byte<br>}<br>说明:Nonce,如果是钱包账号,Nonce代表该账号发出交易时的交易序列号,如果是智能合约账号,Nonce代表的是此账号创建的智能合约序号<br>Balance,该账户目前存放以太坊余额的内存地址,请注意是以太币<br>Root,当前mpt树的根节点的hash值<br>CodeHash,如果账号是用户钱包账号,该值为空,如果是智能合约账号,该值对应于当初部署智能合约代码的十六进制哈希值<br>ETH余额查询顺序:<br>1.第一级查询基于内存中的stateObjects对象,这里保留的是近期活跃的账号信息<br>2.第二级查找基于内存中的trie树<br>3.第三级查找基于levelDB,即&lt;k,v&gt;数据库层</p>
+<p>UTXO 模型和Account模型对比<br>1.计算方面,UTXO本身没有过多复杂技术,且链上计算并不多,由于Account是图灵完备的,支持智能合约,他的运算大部分在链上,计算相对更复杂,因为智能合约部分对应的是从solidity变成到编译的整个过程,通过代码能够实现一切可计算的问题,所以Account模型币UTXO模型更具可编程性和扩展性<br>2.并发方面,UTXO模型支持并发,因为它不受交易编号顺序的限制,所以可以无须考虑顺序而以批量方式发起交易,Account模型应为存在Nonce交易序号,严谨的要求每笔交易Nonce都是递增的,因此,它的每笔交易都存在强关联性<br>3.在交易重放方面,UTXO模型和Account模型都具备抵抗交易重发的情况的功能,UTXO每笔交易都有inputs和outputs,他们都存在从入到出的关系,而Account模型做法是采用强顺序性的交易序列号Nonce来抵抗重复交易问题<br>4.存储方面,UTXO模型交易记录存储在链上区块中,这样时间一长,比特币的公链上,区块整体数据非常庞大,而Account模型存储在链上的只有MPT树的根节点的hash值,实际的节点数据都持久的存放在每个节点的本地&lt;k,v&gt;levelDB中<br>5.余额查询效率方面,因为UTXO模型并没有直接存储某个钱包地址的资产余额,而是通过多个输入输出交易记录来记录资产变化,从而需要查询所有相关的UTXO交易记录的变化,再汇总计算,而Account模型使用了三级缓存的形式,及时缓存中没有记录,其最终也会到levelDB中直接查询余额信息<br>综上所述,Account模型具备可编程性和灵活性,而UTXO则在简单业务和跨链上,有独到和开创性的优势</p>
+<p>以太坊Ghost协议&#x2F;幽灵协议作用:1.选择出最优链,2.对最优链中分叉区块进行处理<br>不同于btc的最长链规则来解决区块分叉问题,以太坊选择最长链时,不是以那条链区块最长为标准,而是将分叉区块也考虑进去了,选择了一条包含分叉区块在内的数目最多的链作为最长链.</p>
+<p>ERC20 智能合约<br>标准成员变量:<br>string public name;    &#x2F;&#x2F; 币名字<br>string public symbol; &#x2F;&#x2F; 币简称<br>uint8 public decimals; &#x2F;&#x2F; 精度<br>uint256 public totalSupply; &#x2F;&#x2F; 总供应链<br>标准函数<br>contract ERC20 {<br>&#x2F;&#x2F;总量<br>function totalSupply() constant returns (uint256 totalSupply);<br>&#x2F;&#x2F;余额<br>function balanceOf(address  _owner) constant returns (uint256 balance);<br>&#x2F;&#x2F; 转账函数<br>&#x2F;&#x2F; 转出地址一般是:当前调用这个转账函数的地址msg.sender,它是函数代码中的一个变量<br>&#x2F;&#x2F; 合约创建时所设置的最初的收币地址<br>function transfer(address  _to, unit256 value) returns (bool success);<br>&#x2F;&#x2F; _from地址从参数传进来的,这意味着我们可以设置任何钱包地址为转出地址,这个函数必须得到approve函数授权<br>function transferFrom(address  _from, address  _to, uint256  _value) returns (bool success);<br>&#x2F;&#x2F; 授权函数,在使用transferFromo时,只有满足授权值才能是哟哦哦那个transferFrom函数<br>function approve(address _spender, uint256 _value) returns (bool success);<br>&#x2F;&#x2F; 授权额度查看函数,常用来查看_owner给_spender授权了多少个代币的数值,查看approve授权额度,开发中常用的函数<br>function allowance(address _owner, address _spender) constant returns (uint256 ret);<br>&#x2F;&#x2F; Transfer事件是在调用transfer和transferFrom函数内触发,因为调用以太坊交易接口时,需要等待矿工打包到区块中,所以需要等待交易打包到区块后才知道最终    结果,等待时间长短也是不确定的,所以需要一个event来通知,等待交易被矿工打包到区块后,EVM执行智能合约的转账函数,最后触发event,随后客户端就能监听代码中最终处理结果.<br>event Transfer(address indexed_from, address indexed_to, uint256 _value);<br>event Approval(address indexed_owner, address indexed_spender, uint256 _value);<br>}</p>
+<p>sendTransaction(仅限ETH交易) 和 sendRayTransaction(所有交易,包括智能合约对象交易)方法参数<br>from -string number: 交易发起地址,如果交易的to是智能合约,那么合约代码中的msg.sender变量代表的就是这个from地址<br>to -string(optional):代表当前交易的接收地址,注意,如果这个接收地址不能理解为收款地址,因为to的取值存在以下3中情况<br>a.智能合约的地址   &#x2F;&#x2F; erc20代币转账<br>b.普通以太坊用户的钱包地址   &#x2F;&#x2F; ETH转账<br>c.取空值时,代表当前的交易是创建智能合约的交易  &#x2F;&#x2F; 代表当前交易是部署智能合约到链上的交易<br>value:转账的数值,注意,这个值在使用sendRawTransaction进行ERC20代币转账时应该是0,在ERC20代币转账时,索要转账的多少定义在data参数中<br>使用sendTransaction进行ETH转账时,value必须有值,且value是乘上10e18次方形式的大树值<br>使用sendRawTransaction进行ETH转账时,注意以下3点<br>a.to应该对应收款钱包的以太坊地址<br>b.value对应的是ETH数值,不是0<br>c.data参数为空字符串<br>只有满足这3个条件,sendRawTransaction进行的交易操作才是以太坊ETH的转账<br>gas:这个gas参数就是gasLimit,最终交易成功时,真实使用的是GasUsed,交易成功时,多出的燃料费会返回,所谓的多出的就是(GasLimit-GasUsed)*GasPrice<br>gasPrice:每一笔gas的价值是多少wei,ETH和wei的换算关系<br>nonce:交易序号<br>data:16进制格式,很重要的参数,既用于交易接口,又用在eth_call中<br>如0x70C3C0D90DC5C8C4E0D688556F2fD1392556F894<br>包括0x的前10个字符是methodId,它的生成方式比较复杂,由对应的合约函数的名称经过签名或,在通过keccak256加密取特定数量的字节,然后转为16进制得出,以下是以太坊版本标准methodId的代码<br>function (method Method) Id() [] byte {<br>return crypto.Keccak256([]byte(method.Sig()))[:4]<br>}<br>常见的methodId有:查询余额的balanceOf是0x70a08231<br>转账transfer的是0x9059cbb<br>前10个之后的字符,需要满足以下条件<br>a.代表的智能合约中的函数的擦是<br>b.排序方式按照合约的函数参数的顺序排列<br>c.十六进制的形式<br>d.不允许有0x,即先转成16进制,然后去掉0x字符<br>e.去掉0x后,每个字符个数是64<br>交易状态:Unknown,Pending,Success,Failed<br>由于以太坊交易池的大小有限制,所以常常会造成一些订单只处在 被放置交易池,尚未被交易的状态,该状态称为unknown,造成这种情况的原因是矿工在交易池中的交易订单排序算法受GasPrice影响,过低的GasPrice订单会一直处于Pending状态,迟迟不被矿工打包,Pending状态可能持续几天升值更长的时间.</p>
+<p>以太坊零地址特点<br>1.与创世区块无关<br>2.当启动以太坊挖矿程序,也即在节点中启动矿工挖矿时,如果没有设置挖矿的收益地址,就会默认使用零地址挖矿,挖矿所得的ETH将归零地址所有<br>3.是一个合法的以太坊地址,能够接受代币的转账<br>4.它的私钥可能仍没被碰撞出(私钥碰撞出来,就可以提走0地址所有ETH)<br>每个合法的以太坊地址都对应一个私钥,只要满足地址格式,我们不需要知道它的私钥是什么就可以使用,可以向他交易转账,查询它的各种操作记录.<br>零地址由于很容易记住,不需要刻意进行私钥运算,但它始终对应有一个私钥,在是要生成公钥的算法中,我们如果要根据公钥来逆推导出私钥,概率非常小,但不是不可能,目前来看0地址私钥还未碰撞出来,拥有者也未转出任何一个ETH.综上所诉,零地址私钥可能还没碰撞出来</p>
+<p>零地址的交易转出假象<br>零地址的私钥还没被碰撞出来前,不可能有人使用零地址去做交易,转出操作,但当我们在ethscan.io查看零地址的非ETH交易记录时,确能够看到存在out的情况.这就是零地址转出假象.零地址智能合约的触发”Transfer event”事件的代码中被开发设置为Event的from参数,address(0)就被当做了Transfer event的froom参数,当函数mint被sendRawTransaction调用后,所触发的Event就会被记录到区块中,最终ethscan显示交易记录时,页面显示的from就是mint函数中Transfer事件的入参from值<br>需要注意的是,负责sendRawTransaction接口函数的私钥签名是函数调用者,而不是fromo地址,因此可以调用者可以伪造零地址转出记录<br>零地址也可以转出资产,前提是我们在其他地方给零地址先赋予资产<br>construct() public {<br>      &#x2F;&#x2F; 给零地址赋予代币资产<br>balance[0x0] &#x3D; 1000000;<br>}<br>function release(address _to, uint256 _value) public returns (bool success) {<br>require(balance[0x0] &gt;&#x3D; _value);<br>balance[0x0] -&#x3D;_value;<br>balance[_to] +&#x3D;_value;<br>emit Transfer(0x0, _to, _value);<br>return true;<br>}<br>零地址的意义<br>1.用于启动以太坊挖矿程序,如果哦没有设置挖矿的收益地址,默认就设置为使用零地址挖矿<br>&#x2F;&#x2F; 在首发代币时,不存在某个确切的资产拥有者地址,使用0地址作为from地址最为合理<br>2.在智能合约代码编写中使用零地址,例如作为函数的参数</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2024/12/26/%E4%BB%A5%E5%A4%AA%E5%9D%8A%E6%8A%80%E6%9C%AF/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
   
 
 
